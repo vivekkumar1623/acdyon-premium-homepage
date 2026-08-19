@@ -177,7 +177,7 @@ export const CODE_SNIPPETS = {
   curl: {
     language: 'bash',
     filename: 'terminal.sh',
-    code: `# Standard cURL command with PulseGuard gateway
+    code: `# Route request through PulseGuard egress proxy
 curl -x http://gateway.pulseguard.dev:8080 \\
   -H "X-Pulse-Key: pg_live_e93a7c1f8204" \\
   -H "X-Pulse-Profile: chrome-macOS" \\
@@ -189,27 +189,27 @@ curl -x http://gateway.pulseguard.dev:8080 \\
     filename: 'scraper.py',
     code: `import httpx
 
-# Route your existing scrapers through PulseGuard
+# Point standard httpx client to the gateway
 PROXIES = {
     "all://": "http://pg_live_e93a7c1f8204@gateway.pulseguard.dev:8080"
 }
 
 with httpx.Client(proxies=PROXIES, timeout=10.0) as client:
-    # PulseGuard auto-negotiates JA4 TLS, proxy rotation, and AST drift recovery
-    response = client.get(
+    # Target sees genuine browser TLS handshake + randomized JA4 hash
+    res = client.get(
         "https://careers.techcorp.io/api/v2/jobs/401928",
         headers={"X-Pulse-Profile": "chrome-macOS"}
     )
     
-    print("Status:", response.status_code) # 200 OK
-    print("Extracted Data:", response.json())`
+    print("Status:", res.status_code)
+    print("Data:", res.json())`
   },
   node: {
     language: 'javascript',
     filename: 'extractor.js',
     code: `import { chromium } from 'playwright';
 
-// Drop-in proxy support for Playwright / Puppeteer
+// Works with standard Playwright / Puppeteer proxy configuration
 const browser = await chromium.launch({
   proxy: {
     server: 'http://gateway.pulseguard.dev:8080',
@@ -221,7 +221,7 @@ const browser = await chromium.launch({
 const page = await browser.newPage();
 await page.goto('https://store.hardwarehub.com/p/rtx-5090-oc');
 
-// Even if target classes mutated overnight, PulseGuard returns normalized DOM
+// Recovered payload is available even after upstream CSS class changes
 const product = await page.evaluate(() => window.__PULSE_EXTRACTED__);
 console.log(product);`
   },
@@ -237,6 +237,7 @@ import (
 )
 
 func main() {
+	// Standard Go net/http client with proxy
 	proxyURL, _ := url.Parse("http://pg_live_e93a7c1f8204@gateway.pulseguard.dev:8080")
 	client := &http.Client{
 		Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)},

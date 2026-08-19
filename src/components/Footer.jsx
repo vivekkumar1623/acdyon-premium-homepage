@@ -81,7 +81,7 @@ export function Footer({ onOpenEasterEgg }) {
               </li>
               <li>
                 <span className="text-slate-500 font-mono text-2xs">
-                  Zero Fabricated Metrics Policy
+                  RFC 9113 HTTP/2 Protocol
                 </span>
               </li>
             </ul>

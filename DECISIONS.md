@@ -1,42 +1,65 @@
-# Engineering Decisions & Product Rationale
+# Engineering Decisions & Technical Rationale
 
-## 1. Why this approach over the obvious alternative?
+## 1. Product Direction & Concept
 
-### The Rejected Obvious Alternative:
-A generic SaaS dashboard mockup with simulated MRR charts, fake client logos (*"Trusted by Stripe, Google"*), and marketing copy promising an *"All-in-One AI Web Scraping Platform"*.
+When building a homepage for a developer-oriented infrastructure tool, the default trap is creating a generic marketing landing page with vanity charts, placeholder metrics, or vague copy like *"Next-Gen AI Platform"*.
 
-### The Chosen Approach:
-**PulseGuard** — A developer-first egress resilience proxy gateway built specifically to solve the two core points of failure in data extraction pipelines:
-1. **Upstream bot detection & fingerprinting** (Akamai/Cloudflare JA4 TLS matching, IP bans, robotic HTTP/2 stream cues).
-2. **Downstream silent schema drift** (target sites mutating HTML/CSS class names overnight, causing scrapers to return `200 OK` with `null` fields that silently corrupt databases).
+Instead, I focused on a concrete, high-friction problem in data engineering: **resilience in web data extraction pipelines**.
 
-### Why this approach wins:
-- **Demonstrable Product Logic**: Instead of decorative charts, the home page features a hands-on **Live Ingestion Egress & AST Recovery Sandbox**. Visitors can test realistic scraping friction scenarios (LinkedIn job boards, e-commerce catalog drift, SEC EDGAR burst limits), toggle PulseGuard vs. raw clients, and inspect real wire traces, JA4 handshake profiles, and live JSON output.
-- **Zero-Fake-Proof Alignment**: We strictly adhere to the challenge constraint by eliminating fabricated testimonials, inflated user counts, and stock badges. We replace them with honest technical proof: transparent error budget math, zero-headless memory comparisons, and drop-in proxy configuration snippets (`cURL`, `Python`, `Node.js`, `Go`).
+**PulseGuard** is designed as a drop-in egress proxy gateway that addresses two main failure modes:
+1. **Upstream Bot & WAF Fingerprinting**: Modern anti-bot engines (Akamai, Cloudflare) inspect TLS ClientHello handshakes (JA4/JA3 signatures) and HTTP/2 stream settings. Default HTTP clients (Python requests/httpx, Go net/http, standard cURL) broadcast fixed, easily blacklisted automation signatures.
+2. **Downstream Silent DOM Schema Drift**: When target websites push frontend deployments that rename or hash CSS class names, scrapers often still receive a `200 OK` status, but the selectors return `null` values—silently corrupting downstream databases.
 
----
-
-## 2. Trade-offs made under the time limit & 1-Week Roadmap
-
-### Trade-offs Made Under the Time Limit:
-- **Synthetic Target Wire Emulation**: To deliver an instant, deterministic, zero-friction experience without risking third-party rate-limit bans or ToS breaches during evaluation, the live interactive sandbox simulates real wire traces and DOM mutation AST diffs on client-side state rather than streaming live proxy traffic to protected domains.
-- **Single Master Theme**: We committed 100% to a bespoke, high-contrast dark mode canvas (the native environment of data engineers) rather than attempting a half-baked light mode toggle that compromises contrast or terminal aesthetics.
-
-### What We Would Do With a Full Week:
-1. **Live Sandbox Target Proxy Daemon**: Deploy a lightweight WebAssembly/Rust edge worker that lets users paste *any* arbitrary public URL and test real-time JA4 client-hello randomization and AST selector extraction live in the browser.
-2. **Interactive AST Selector Generator**: An interactive DOM inspector visualizer where developers can click on mutated elements to see PulseGuard's structural heuristics generate fallback selector patches in real time.
-3. **Custom Proxy Profile Builder**: A visual configurator allowing engineers to customize TLS extension ordering, ALPN frames, and residential egress geographic distribution, exporting directly to Docker Compose or Kubernetes ConfigMaps.
+### Core Homepage Features:
+- **Interactive Resilience Sandbox**: A hands-on terminal sandbox where evaluators can toggle PulseGuard on and off across realistic target scenarios (LinkedIn job listings, e-commerce catalog drift, SEC EDGAR burst rate limits). It shows live wire traces, JA4 handshake profiles, AST mutation diffs, and recovered JSON payloads.
+- **Drop-in Integration Tabbed Window**: Copyable code snippets for cURL, Python (`httpx`), Node.js (`Playwright`), and Go (`net/http`) showing how easily developers can route existing scrapers through the proxy.
+- **Developer HUD (Easter Egg)**: An interactive command palette / terminal emulator accessible via `⌘K` / `Ctrl+K` or the Konami code (`↑ ↑ ↓ ↓ ← → ← → B A`).
 
 ---
 
-## 3. AI Usage, Verification & Human Engineering
+## 2. Frontend Architecture & Design Decisions
 
-### Where AI Was Used:
-- Rapid generation of initial JSX scaffolding for interactive tab components and scenario data dictionaries.
-- Brainstorming edge-case network log timestamps and JA4 cipher suite strings.
+### Bespoke Vanilla CSS Design System
+Rather than pulling in heavy utility frameworks or runtime CSS-in-JS libraries, I implemented a dedicated CSS token architecture in `src/index.css`:
+- **CSS Custom Properties (Tokens)**: Structured design tokens for colors, surfaces, borders, glow effects, typography scales, and transitions.
+- **Lightweight Grid & Layout Utilities**: Flexbox and CSS Grid layout primitives optimized for responsive breakpoints down to 390px (mobile) up to 1440px (large screens).
+- **Dark Mode Terminal Palette**: Designed specifically with high-contrast surfaces (`#07090e`, `#0d121c`, `#111827`) and distinct accent colors (cyan for primary actions, emerald for healthy states, amber for warnings, rose for blocked requests).
+- **Reduced Motion Support**: Included `@media (prefers-reduced-motion: reduce)` rules for accessibility.
 
-### What Was Personally Verified, Architected, and Changed:
-- **Zero-Dependency Vanilla CSS Engine**: Replaced generic Tailwind build assumptions with a custom, high-precision Vanilla CSS design system (`src/index.css`) featuring custom responsive grid systems, accessible touch targets, and `prefers-reduced-motion` compliance.
-- **Strict Anti-Cliche / Honesty Review**: Audited every single line of copy to remove AI clichés ("Revolutionize your workflow", "Supercharge your pipeline", "10,000+ happy developers"). Every sentence describes concrete network behaviors, TLS frame synthesis, or AST proximity heuristics.
-- **Responsive Viewport Verification**: Manually stress-tested the layout at **390px mobile** (iPhone 14/15 width) and **1440px desktop**, ensuring zero horizontal overflow, touch-friendly tab switching, and collapsible terminal panes.
-- **Bonus Easter Egg Implementation**: Implemented the Developer HUD / Ghost Protocol terminal accessible via keyboard shortcut (`⌘K` / `Ctrl+K`) and the classic Konami code (`↑ ↑ ↓ ↓ ← → ← → B A`).
+### Component Structure
+```
+src/
+├── components/
+│   ├── Navbar.jsx              # Fixed blurred header with status badge & quick actions
+│   ├── Hero.jsx                # Value proposition, copyable CLI command, and feature cards
+│   ├── InteractivePlayground.jsx# Sandbox with simulated live traces & DOM AST diffs
+│   ├── Architecture.jsx        # Deep dive into TLS randomization & AST healing
+│   ├── CodeIntegration.jsx     # Multi-language drop-in code snippets
+│   ├── ComparisonSpecs.jsx     # Architectural matrix & protocol benchmarks
+│   ├── EasterEggModal.jsx      # Interactive command terminal HUD
+│   └── Footer.jsx              # Navigation and status indicators
+├── data/
+│   └── mockScenarios.js        # Scenario datasets, wire traces, and code snippets
+├── index.css                   # Custom design system and layout rules
+└── App.jsx                     # Root application container & global key listeners
+```
+
+---
+
+## 3. Trade-offs & Scope Management
+
+1. **Client-Side Simulation vs. Live Proxy Streaming**:
+   - *Decision*: The interactive playground runs deterministic synthetic traces directly in the client state.
+   - *Rationale*: Routing live proxy requests to external third-party targets during a challenge review risks network rate limits, transient external outages, and ToS friction. The simulated state guarantees a zero-latency, reliable interactive experience for the evaluator.
+
+2. **Focused Single Theme (Dark Terminal Canvas)**:
+   - *Decision*: Focused entirely on a polished dark developer theme rather than splitting attention between dark and light modes.
+   - *Rationale*: Terminal and proxy infrastructure tools are almost universally used in dark environments. Focusing on one theme ensured contrast ratios, syntax styling, and glowing borders were tuned without visual compromises.
+
+---
+
+## 4. Future Roadmap (If Given 1 Week)
+
+1. **WebAssembly Edge Proxy Daemon**: Build a lightweight in-browser WASM/Rust worker allowing users to test real-time JA4 client-hello spoofing and selector extraction against arbitrary public endpoints.
+2. **Visual DOM Inspector**: An interactive AST tree visualizer where users can see how broken CSS selectors are mapped to semantic fallback nodes step-by-step.
+3. **Configuration Export Engine**: A visual builder that exports custom PulseGuard proxy configurations directly to Docker Compose, Kubernetes ConfigMaps, or Helm charts.

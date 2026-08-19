@@ -11,13 +11,13 @@ export function ComparisonSpecs() {
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900 border border-slate-800 text-xs font-mono text-cyan-300 mb-3">
             <Activity className="w-3-5 h-3-5" />
-            <span>Honest Technical Comparison</span>
+            <span>Technical Comparison</span>
           </div>
           <h2 className="text-3xl sm-text-4xl font-extrabold text-white tracking-tight">
-            Why Ingestion Pipelines Fail (And How PulseGuard Fixes Them)
+            How PulseGuard Compares to Raw Scraper Clients
           </h2>
           <p className="text-slate-400 text-sm sm-text-base mt-2">
-            No marketing vanity metrics. Here is the direct architectural comparison between default scraper clients and the PulseGuard resilience proxy.
+            A direct architectural comparison between default HTTP scraping stacks and the PulseGuard resilience proxy.
           </p>
         </div>
 
